@@ -6,12 +6,17 @@
 import SwiftUI
 
 struct CommunityView: View {
+    @StateObject private var communityService = CommunityService.shared
     @State private var selectedCategory: CommunityCategory? = nil
     @State private var selectedPost: CommunityPost? = nil
 
     var filteredPosts: [CommunityPost] {
-        guard let cat = selectedCategory else { return MockData.communityPosts }
-        return MockData.communityPosts.filter { $0.category == cat }
+        guard let cat = selectedCategory else { return communityService.posts }
+        return communityService.posts.filter { $0.category == cat }
+    }
+    
+    var hotPosts: [CommunityPost] {
+        communityService.posts.filter { $0.isHot }
     }
 
     var body: some View {
@@ -30,16 +35,38 @@ struct CommunityView: View {
                         .padding(.vertical, 12)
 
                     // Posts
-                    LazyVStack(spacing: 14) {
-                        ForEach(filteredPosts) { post in
-                            NavigationLink(destination: CommunityPostDetail(post: post)) {
-                                CommunityPostCard(post: post)
+                    if communityService.isLoading {
+                        ProgressView("Đang tải...")
+                            .padding(.top, 40)
+                    } else if filteredPosts.isEmpty {
+                        VStack(spacing: 16) {
+                            Image(systemName: "bubble.left.and.bubble.right.fill")
+                                .font(.system(size: 48))
+                                .foregroundStyle(.secondary)
+                            Text("Chưa có bài viết nào")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+                            if let error = communityService.errorMessage {
+                                Text(error)
+                                    .font(.caption)
+                                    .foregroundStyle(.red)
+                                    .multilineTextAlignment(.center)
                             }
-                            .buttonStyle(.plain)
                         }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 60)
+                    } else {
+                        LazyVStack(spacing: 14) {
+                            ForEach(filteredPosts) { post in
+                                NavigationLink(destination: CommunityPostDetail(post: post)) {
+                                    CommunityPostCard(post: post)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 20)
                 }
             }
             .navigationTitle("Cộng đồng")
@@ -52,6 +79,11 @@ struct CommunityView: View {
                             .padding(6)
                     }
                     .buttonStyle(.glass)
+                }
+            }
+            .onAppear {
+                Task {
+                    await communityService.fetchPosts(category: selectedCategory, hot: nil)
                 }
             }
         }
@@ -72,7 +104,7 @@ struct CommunityView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 14) {
-                    ForEach(MockData.communityPosts.filter { $0.isHot }) { post in
+                    ForEach(hotPosts) { post in
                         NavigationLink(destination: CommunityPostDetail(post: post)) {
                             HotPostCard(post: post)
                         }

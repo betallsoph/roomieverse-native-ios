@@ -41,14 +41,7 @@ class ListingService: ObservableObject {
             await MainActor.run {
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
-                
-                // Fallback to mock data if Firebase not configured
-                if self.listings.isEmpty {
-                    self.listings = MockData.listings
-                    if let category = category {
-                        self.listings = self.listings.filter { $0.category == category }
-                    }
-                }
+                self.listings = []
             }
         }
     }
@@ -58,8 +51,7 @@ class ListingService: ObservableObject {
             let apiListing = try await firestore.fetchListing(id: id)
             return convertToAppModel(apiListing)
         } catch {
-            // Fallback to mock data
-            return MockData.listings.first { $0.id == id }
+            return nil
         }
     }
     
@@ -296,17 +288,7 @@ class CommunityService: ObservableObject {
             await MainActor.run {
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
-                
-                // Fallback to mock data
-                if self.posts.isEmpty {
-                    self.posts = MockData.communityPosts
-                    if let category = category {
-                        self.posts = self.posts.filter { $0.category == category }
-                    }
-                    if let hot = hot {
-                        self.posts = self.posts.filter { $0.isHot == hot }
-                    }
-                }
+                self.posts = []
             }
         }
     }
@@ -316,7 +298,7 @@ class CommunityService: ObservableObject {
             let apiPost = try await firestore.fetchCommunityPost(id: id)
             return convertToAppModel(apiPost)
         } catch {
-            return MockData.communityPosts.first { $0.id == id }
+            return nil
         }
     }
     

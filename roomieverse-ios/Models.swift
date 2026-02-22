@@ -206,16 +206,55 @@ enum AppTab: Int, Hashable {
 class AppState: ObservableObject {
     @Published var favoriteListingIds: Set<String> = []
     @Published var selectedTab: AppTab = .home
+    
+    private let listingService = ListingService.shared
+    private let authService = AuthService.shared
 
     func toggleFavorite(listingId: String) {
-        if favoriteListingIds.contains(listingId) {
+        let wasFavorite = favoriteListingIds.contains(listingId)
+        
+        if wasFavorite {
             favoriteListingIds.remove(listingId)
         } else {
             favoriteListingIds.insert(listingId)
+        }
+        
+        // Sync with Firebase
+        Task {
+            guard let userId = authService.currentUser?.uid else { return }
+            
+            do {
+                if wasFavorite {
+                    try await listingService.removeFavorite(userId: userId, listingId: listingId)
+                } else {
+                    try await listingService.addFavorite(userId: userId, listingId: listingId)
+                }
+            } catch {
+                // Revert on error
+                await MainActor.run {
+                    if wasFavorite {
+                        self.favoriteListingIds.insert(listingId)
+                    } else {
+                        self.favoriteListingIds.remove(listingId)
+                    }
+                }
+            }
         }
     }
 
     func isFavorite(listingId: String) -> Bool {
         favoriteListingIds.contains(listingId)
+    }
+    
+    func loadFavorites() {
+        Task {
+            guard let userId = authService.currentUser?.uid else { return }
+            
+            let favorites = await listingService.fetchUserFavorites(userId: userId)
+            
+            await MainActor.run {
+                self.favoriteListingIds = Set(favorites.map { $0.id })
+            }
+        }
     }
 }

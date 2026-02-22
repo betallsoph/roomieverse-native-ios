@@ -7,12 +7,13 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var listingService = ListingService.shared
     @State private var selectedCategory: ListingCategory? = nil
     @State private var searchText: String = ""
     @State private var selectedListing: RoomListing? = nil
 
     var filteredListings: [RoomListing] {
-        var result = MockData.listings
+        var result = listingService.listings
         if let cat = selectedCategory {
             result = result.filter { $0.category == cat }
         }
@@ -27,7 +28,7 @@ struct HomeView: View {
     }
 
     var featuredListings: [RoomListing] {
-        MockData.listings.filter { $0.isFeatured }
+        listingService.listings.filter { $0.isFeatured }
     }
 
     var body: some View {
@@ -46,16 +47,38 @@ struct HomeView: View {
                         .padding(.vertical, 12)
 
                     // Listings
-                    LazyVStack(spacing: 14) {
-                        ForEach(filteredListings) { listing in
-                            NavigationLink(destination: ListingDetailView(listing: listing)) {
-                                ListingCard(listing: listing)
+                    if listingService.isLoading {
+                        ProgressView("Đang tải...")
+                            .padding(.top, 40)
+                    } else if filteredListings.isEmpty {
+                        VStack(spacing: 16) {
+                            Image(systemName: "house.slash")
+                                .font(.system(size: 48))
+                                .foregroundStyle(.secondary)
+                            Text("Chưa có bài đăng nào")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+                            if let error = listingService.errorMessage {
+                                Text(error)
+                                    .font(.caption)
+                                    .foregroundStyle(.red)
+                                    .multilineTextAlignment(.center)
                             }
-                            .buttonStyle(.plain)
                         }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 60)
+                    } else {
+                        LazyVStack(spacing: 14) {
+                            ForEach(filteredListings) { listing in
+                                NavigationLink(destination: ListingDetailView(listing: listing)) {
+                                    ListingCard(listing: listing)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 20)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -76,6 +99,11 @@ struct HomeView: View {
                 }
             }
             .searchable(text: $searchText, prompt: "Tìm phòng, khu vực...")
+            .onAppear {
+                Task {
+                    await listingService.fetchListings(category: selectedCategory)
+                }
+            }
         }
     }
 

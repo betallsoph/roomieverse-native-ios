@@ -11,21 +11,25 @@ enum ProfileTab {
 
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var listingService = ListingService.shared
+    @StateObject private var authService = AuthService.shared
     @State private var profileTab: ProfileTab = .listings
+    @State private var favoriteListings: [RoomListing] = []
+    @State private var userListings: [RoomListing] = []
 
-    // Mock user data
-    let userName = "An Tran"
-    let userEmail = "an@example.com"
-    let userOccupation = "Software Engineer"
+    var userName: String {
+        authService.currentUser?.displayName ?? "User"
+    }
+    
+    var userEmail: String {
+        authService.currentUser?.email ?? ""
+    }
+    
+    var userOccupation: String {
+        authService.currentUser?.occupation ?? "Chưa cập nhật"
+    }
+    
     let userBio = "Yêu thích sự gọn gàng, ngăn nắp. Thích nấu ăn và đọc sách. Đang tìm bạn ở ghép tại Sài Gòn."
-
-    var userListings: [RoomListing] {
-        MockData.listings.prefix(2).map { $0 }
-    }
-
-    var favoriteListings: [RoomListing] {
-        MockData.listings.filter { appState.isFavorite(listingId: $0.id) }
-    }
 
     var body: some View {
         NavigationStack {
@@ -82,6 +86,33 @@ struct ProfileView: View {
                     }
                     .buttonStyle(.glass)
                 }
+            }
+            .onAppear {
+                loadUserData()
+            }
+        }
+    }
+    
+    private func loadUserData() {
+        // Load favorites
+        appState.loadFavorites()
+        
+        Task {
+            guard let userId = authService.currentUser?.uid else { return }
+            
+            // Load user's listings
+            let allListings = try? await FirestoreService.shared.fetchListings(category: nil, status: .active)
+            let myListings = allListings?.filter { $0.userId == userId } ?? []
+            
+            await MainActor.run {
+                self.userListings = myListings.compactMap { listingService.convertToAppModel($0) }
+            }
+            
+            // Load favorite listings
+            let favorites = await listingService.fetchUserFavorites(userId: userId)
+            
+            await MainActor.run {
+                self.favoriteListings = favorites
             }
         }
     }
