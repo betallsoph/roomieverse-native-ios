@@ -383,7 +383,31 @@ struct ProfileView: View {
                 Divider().padding(.leading, 48)
                 SettingsRow(icon: "questionmark.circle.fill", label: "Hỗ trợ", color: .subleaseColor)
                 Divider().padding(.leading, 48)
-                SettingsRow(icon: "rectangle.portrait.and.arrow.right.fill", label: "Đăng xuất", color: .communityDrama)
+                Button {
+                    authService.signOut()
+                } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: "rectangle.portrait.and.arrow.right.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.communityDrama)
+                            .frame(width: 30, height: 30)
+                            .background(Color.communityDrama.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                        Text("Đăng xuất")
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                }
+                .buttonStyle(.plain)
             }
             .glassEffect(in: .rect(cornerRadius: 16))
         }

@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		6496D4A72F4B84BD0014D7B2 /* ModerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6496D4A62F4B84BD0014D7B2 /* ModerationService.swift */; };
+		6496D4A92F4B86410014D7B2 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6496D4A82F4B86410014D7B2 /* LoginView.swift */; };
+		6496D4AB2F4B864D0014D7B2 /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6496D4AA2F4B864D0014D7B2 /* AuthenticationView.swift */; };
 		64D4EA222F47EFE300D74CB3 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D4EA212F47EFE300D74CB3 /* APIConfig.swift */; };
 		64D4EA242F47F00A00D74CB3 /* FirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D4EA232F47F00A00D74CB3 /* FirebaseManager.swift */; };
 		64D4EA262F47F03200D74CB3 /* ListingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D4EA252F47F03200D74CB3 /* ListingService.swift */; };
@@ -17,6 +19,8 @@
 
 /* Begin PBXFileReference section */
 		6496D4A62F4B84BD0014D7B2 /* ModerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModerationService.swift; sourceTree = "<group>"; };
+		6496D4A82F4B86410014D7B2 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		6496D4AA2F4B864D0014D7B2 /* AuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationView.swift; sourceTree = "<group>"; };
 		64BDBCE52F4604F300B2D1FF /* roomieverse-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "roomieverse-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		64D4EA212F47EFE300D74CB3 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfig.swift; sourceTree = "<group>"; };
 		64D4EA232F47F00A00D74CB3 /* FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseManager.swift; sourceTree = "<group>"; };
@@ -55,6 +59,8 @@
 				64D4EA272F47F04600D74CB3 /* AuthService.swift */,
 				64D4EA292F47F0F200D74CB3 /* SETUP.md */,
 				6496D4A62F4B84BD0014D7B2 /* ModerationService.swift */,
+				6496D4A82F4B86410014D7B2 /* LoginView.swift */,
+				6496D4AA2F4B864D0014D7B2 /* AuthenticationView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -146,6 +152,8 @@
 				64D4EA262F47F03200D74CB3 /* ListingService.swift in Sources */,
 				64D4EA282F47F04600D74CB3 /* AuthService.swift in Sources */,
 				6496D4A72F4B84BD0014D7B2 /* ModerationService.swift in Sources */,
+				6496D4AB2F4B864D0014D7B2 /* AuthenticationView.swift in Sources */,
+				6496D4A92F4B86410014D7B2 /* LoginView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

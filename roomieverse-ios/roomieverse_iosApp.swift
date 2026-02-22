@@ -7,12 +7,14 @@ import SwiftUI
 
 @main
 struct roomieverse_iosApp: App {
-    @StateObject private var appState = AppState()
+    // Note: Firebase configuration would go here
+    // init() {
+    //     FirebaseApp.configure()
+    // }
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
-                .environmentObject(appState)
+            AuthenticationView()
         }
     }
 }
