@@ -151,6 +151,33 @@ class AuthService: ObservableObject {
     func getIdToken() async throws -> String {
         return try await firebaseManager.getCurrentUserToken()
     }
+    
+    // MARK: - Role Management
+    
+    func setUserRole(uid: String, role: UserRole) async throws {
+        guard isAdmin else {
+            throw NSError(domain: "Auth", code: -1, userInfo: [
+                NSLocalizedDescriptionKey: "Only admins can change user roles"
+            ])
+        }
+        
+        let token = try await getIdToken()
+        
+        guard let url = URL(string: "\(APIConfig.apiBaseURL)/api/admin/set-role") else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let payload = SetRoleRequest(uid: uid, role: role.rawValue)
+        request.httpBody = try JSONEncoder().encode(payload)
+        
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let _ = try JSONDecoder().decode(SetRoleResponse.self, from: data)
+    }
 }
 
 // MARK: - Auth View Models

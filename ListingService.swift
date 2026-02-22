@@ -121,6 +121,8 @@ class ListingService: ObservableObject {
             viewCount: 0,
             favoriteCount: 0,
             moderatedBy: nil,
+            moderatedAt: nil,
+            moderationNote: nil,
             rejectionReason: nil,
             createdAt: ISO8601DateFormatter().string(from: Date()),
             updatedAt: ISO8601DateFormatter().string(from: Date())
@@ -195,13 +197,14 @@ class ListingService: ObservableObject {
     func uploadListingImages(_ images: [Data], listingId: String) async throws -> [String] {
         var urls: [String] = []
         
-        for imageData in images {
-            let response = try await ImageUploadService.shared.uploadImage(
+        for (index, imageData) in images.enumerated() {
+            let publicUrl = try await ImageUploadService.shared.uploadImage(
                 imageData,
                 folder: "listings",
-                id: listingId
+                id: listingId,
+                filename: "image-\(index).jpg"
             )
-            urls.append(response.url)
+            urls.append(publicUrl)
         }
         
         return urls
@@ -209,7 +212,7 @@ class ListingService: ObservableObject {
     
     // MARK: - Model Conversion
     
-    private func convertToAppModel(_ apiListing: APIRoomListing) -> RoomListing? {
+    func convertToAppModel(_ apiListing: APIRoomListing) -> RoomListing? {
         guard let category = ListingCategory(rawValue: apiListing.category) else {
             return nil
         }
@@ -323,7 +326,7 @@ class CommunityService: ObservableObject {
         }
     }
     
-    private func convertToAppModel(_ apiPost: APICommunityPost) -> CommunityPost? {
+    func convertToAppModel(_ apiPost: APICommunityPost) -> CommunityPost? {
         guard let category = CommunityCategory(rawValue: apiPost.category) else {
             return nil
         }

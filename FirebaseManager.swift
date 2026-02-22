@@ -260,42 +260,44 @@ class ImageUploadService {
     
     private init() {}
     
-    func uploadImage(_ imageData: Data, folder: String, id: String) async throws -> ImageUploadResponse {
+    func uploadImage(_ imageData: Data, folder: String, id: String, filename: String = "image.jpg") async throws -> String {
+        // Step 1: Get presigned URL from backend
         guard let url = URL(string: "\(APIConfig.apiBaseURL)/api/upload") else {
             throw URLError(.badURL)
         }
         
-        let boundary = UUID().uuidString
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        var body = Data()
-        
-        // Add file
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"image.jpg\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
-        body.append(imageData)
-        body.append("\r\n".data(using: .utf8)!)
-        
-        // Add folder
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"folder\"\r\n\r\n".data(using: .utf8)!)
-        body.append("\(folder)\r\n".data(using: .utf8)!)
-        
-        // Add id
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"id\"\r\n\r\n".data(using: .utf8)!)
-        body.append("\(id)\r\n".data(using: .utf8)!)
-        
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-        
-        request.httpBody = body
+        let payload = [
+            "folder": folder,
+            "id": id,
+            "filename": filename
+        ]
+        request.httpBody = try JSONEncoder().encode(payload)
         
         let (data, _) = try await URLSession.shared.data(for: request)
         let response = try JSONDecoder().decode(ImageUploadResponse.self, from: data)
         
-        return response
+        // Step 2: Upload to R2 using presigned URL
+        guard let uploadURL = URL(string: response.presignedUrl) else {
+            throw URLError(.badURL)
+        }
+        
+        var uploadRequest = URLRequest(url: uploadURL)
+        uploadRequest.httpMethod = "PUT"
+        uploadRequest.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
+        uploadRequest.httpBody = imageData
+        
+        let (_, uploadResponse) = try await URLSession.shared.data(for: uploadRequest)
+        
+        guard let httpResponse = uploadResponse as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw URLError(.cannotParseResponse)
+        }
+        
+        // Return public URL
+        return response.publicUrl
     }
 }

@@ -53,7 +53,34 @@ enum PostStatus: String, Codable {
 
 enum UserRole: String, Codable {
     case user
+    case mod
+    case tester
     case admin
+    
+    var hierarchy: Int {
+        switch self {
+        case .user: return 0
+        case .mod: return 1
+        case .tester: return 2
+        case .admin: return 3
+        }
+    }
+    
+    func canModerate() -> Bool {
+        return hierarchy >= UserRole.mod.hierarchy
+    }
+    
+    func canBypassModeration() -> Bool {
+        return hierarchy >= UserRole.tester.hierarchy
+    }
+    
+    func canAccessAdmin() -> Bool {
+        return hierarchy >= UserRole.tester.hierarchy
+    }
+    
+    func canManageRoles() -> Bool {
+        return hierarchy >= UserRole.admin.hierarchy
+    }
 }
 
 // Extended RoomListing to match API schema
@@ -91,6 +118,8 @@ struct APIRoomListing: Codable, Identifiable {
     let viewCount: Int?
     let favoriteCount: Int?
     let moderatedBy: String?
+    let moderatedAt: String?
+    let moderationNote: String?
     let rejectionReason: String?
     let createdAt: String?
     let updatedAt: String?
@@ -200,7 +229,8 @@ struct APIReport: Codable, Identifiable {
 // MARK: - API Response Wrappers
 
 struct ImageUploadResponse: Codable {
-    let url: String
+    let presignedUrl: String
+    let publicUrl: String
     let key: String
 }
 
@@ -212,4 +242,13 @@ struct SeedResponse: Codable {
     let success: Bool
     let message: String
     let ids: [String]
+}
+
+struct SetRoleRequest: Codable {
+    let uid: String
+    let role: String
+}
+
+struct SetRoleResponse: Codable {
+    let success: Bool
 }
